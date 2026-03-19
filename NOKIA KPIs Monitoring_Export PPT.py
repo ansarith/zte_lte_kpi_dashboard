@@ -36,7 +36,14 @@ st.title("📊 LTE KPI Dashboard")
 
 # ---------------- KPI SELECTION ----------------
 kpi_columns = [col for col in df.columns if col not in ["Begin Time","ENBFunction Name","Cell Name"]]
-selected_kpis = st.multiselect("Select KPI(s)", options=kpi_columns, default=kpi_columns[:4])
+selected_kpis = st.multiselect(
+    "Select KPI(s)",
+    options=kpi_columns,
+    default=kpi_columns[:4]
+)
+
+# 🎯 Ensure consistent order (fix color shifting)
+selected_kpis = sorted(selected_kpis)4])
 
 # ---------------- SITE FILTER ----------------
 enodeb_selected = st.multiselect("Select ENBFunction Name", options=sorted(df["ENBFunction Name"].unique()))
@@ -126,7 +133,13 @@ if not plot_df.empty:
 
     colors = px.colors.qualitative.Dark24
 
-    # 🎯 STEP 1: Create fixed color map
+    # 🎯 KPI color map (ALWAYS needed)
+    kpi_color_map = {
+        kpi: colors[i % len(colors)]
+        for i, kpi in enumerate(sorted(selected_kpis))
+    }
+
+    # 🎯 Cell color map (ONLY for non-group mode)
     if not group_option and "Cell Name" in plot_df.columns:
         unique_cells = sorted(plot_df["Cell Name"].unique())
         color_map = {
@@ -164,7 +177,8 @@ if not plot_df.empty:
                     x=plot_df["Time_str"],
                     y=plot_df[selected_kpi],
                     mode="lines+markers",
-                    name=selected_kpi
+                    name=selected_kpi,
+                    line=dict(color=kpi_color_map[selected_kpi])
                 )
             )
 
