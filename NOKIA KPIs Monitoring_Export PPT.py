@@ -119,11 +119,21 @@ plot_df["Time_str"] = plot_df[time_col].dt.strftime(
 )
 
 # ---------------- DASHBOARD (PLOTLY) ----------------
+# ---------------- DASHBOARD (PLOTLY) ----------------
 figures_png = []
 
 if not plot_df.empty:
 
     colors = px.colors.qualitative.Dark24
+
+    # 🎯 STEP 1: Create fixed color map
+    if not group_option and "Cell Name" in plot_df.columns:
+        unique_cells = sorted(plot_df["Cell Name"].unique())
+        color_map = {
+            cell: colors[i % len(colors)]
+            for i, cell in enumerate(unique_cells)
+        }
+
     cols = st.columns(2)
 
     for idx, selected_kpi in enumerate(selected_kpis[:4]):
@@ -143,7 +153,7 @@ if not plot_df.empty:
                         y=cell_df[selected_kpi],
                         mode="lines+markers",
                         name=cell,
-                        line=dict(color=colors[i % len(colors)])
+                        line=dict(color=color_map[cell])
                     )
                 )
 
