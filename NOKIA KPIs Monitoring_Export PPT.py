@@ -18,7 +18,7 @@ st.write("🟢 Python executable:", sys.executable)
 @st.cache_data
 def load_data(path):
     df = pd.read_excel(path)
-    df["Period start time"] = pd.to_datetime(df["Period start time"], errors="coerce")
+    df["Begin Time"] = pd.to_datetime(df["Begin Time"], errors="coerce")
 
     percentage_kpis = [col for col in df.columns if "%" in col or "Rate" in col]
 
@@ -29,25 +29,25 @@ def load_data(path):
 
     return df
 
-DATA_PATH = "4G_Main_KPIs_Report_SRAN21B-Sarith-2025_10_13-Site KCH2567RBR & 2070_LB.xlsx"
+DATA_PATH = "Performance Management-History Query-2025_LTE_KPI-Sarith-20260319094859.xlsx"
 df = load_data(DATA_PATH)
 
 st.title("📊 LTE KPI Dashboard")
 
 # ---------------- KPI SELECTION ----------------
-kpi_columns = [col for col in df.columns if col not in ["Period start time","LNBTS name","LNCEL name"]]
+kpi_columns = [col for col in df.columns if col not in ["Begin Time","ENBFunction Name","Cell Name"]]
 selected_kpis = st.multiselect("Select KPI(s)", options=kpi_columns, default=kpi_columns[:4])
 
 # ---------------- SITE FILTER ----------------
-enodeb_selected = st.multiselect("Select LNBTS name", options=sorted(df["LNBTS name"].unique()))
+enodeb_selected = st.multiselect("Select ENBFunction Name", options=sorted(df["ENBFunction Name"].unique()))
 
 # ---------------- CELL FILTER ----------------
 if enodeb_selected:
-    cell_options = sorted(df[df["LNBTS name"].isin(enodeb_selected)]["LNCEL name"].unique())
+    cell_options = sorted(df[df["ENBFunction Name"].isin(enodeb_selected)]["Cell Name"].unique())
 else:
-    cell_options = sorted(df["LNCEL name"].unique())
+    cell_options = sorted(df["Cell Name"].unique())
 
-cell_selected = st.multiselect("Select LNCEL name", options=cell_options)
+cell_selected = st.multiselect("Select Cell Name", options=cell_options)
 
 # ---------------- OPTIONS ----------------
 daily_option = st.checkbox("📅 Daily Aggregation")
@@ -57,10 +57,10 @@ group_option = st.checkbox("🏙️ Group by Site")
 plot_df = df.copy()
 
 if enodeb_selected:
-    plot_df = plot_df[plot_df["LNBTS name"].isin(enodeb_selected)]
+    plot_df = plot_df[plot_df["ENBFunction Name"].isin(enodeb_selected)]
 
 if cell_selected:
-    plot_df = plot_df[plot_df["LNCEL name"].isin(cell_selected)]
+    plot_df = plot_df[plot_df["Cell Name"].isin(cell_selected)]
 
 # ---------------- AGGREGATION ----------------
 def aggregate_data(df, kpis, daily=False, group=False):
@@ -72,27 +72,27 @@ def aggregate_data(df, kpis, daily=False, group=False):
 
     for kpi in kpis:
         if kpi in [
-            "PDCP SDU Volume, DL",
-            "PDCP SDU Volume, UL",
-            "Total LTE data volume, DL + UL",
-            "Avg RRC conn UE",
-            "RRC Connected UEs Max (M8051C56)"
+            "DL Data Total Volume (Gbyte)",
+            "UL Data Total Volume (Gbyte)",
+            "Total Data Total Volume (Gbyte)",
+            "Ave RRC Connected Ue",
+            "Max RRC Connected Ue"
         ]:
             agg_dict[kpi] = "sum"
         else:
             agg_dict[kpi] = "mean"
 
     if daily:
-        df["Date"] = df["Period start time"].dt.normalize()
+        df["Date"] = df["Begin Time"].dt.normalize()
         time_col = "Date"
     else:
-        time_col = "Period start time"
+        time_col = "Begin Time"
 
     if not group:
         group_cols = [time_col]
 
-        if "LNCEL name" in df.columns:
-            group_cols.append("LNCEL name")
+        if "Cell Name" in df.columns:
+            group_cols.append("Cell Name")
 
         grouped = df.groupby(group_cols, as_index=False).agg(agg_dict)
 
@@ -103,7 +103,7 @@ def aggregate_data(df, kpis, daily=False, group=False):
 
 plot_df = aggregate_data(plot_df, selected_kpis, daily_option, group_option)
 
-time_col = "Date" if daily_option else "Period start time"
+time_col = "Date" if daily_option else "Begin Time"
 
 plot_df[time_col] = pd.to_datetime(plot_df[time_col], errors="coerce")
 plot_df = plot_df.dropna(subset=[time_col])
@@ -125,11 +125,11 @@ if not plot_df.empty:
         fig = go.Figure()
 
         # ---------- PLOTLY DASHBOARD GRAPH ----------
-        if not group_option and "LNCEL name" in plot_df.columns:
+        if not group_option and "Cell Name" in plot_df.columns:
 
-            for i, cell in enumerate(plot_df["LNCEL name"].unique()):
+            for i, cell in enumerate(plot_df["Cell Name"].unique()):
 
-                cell_df = plot_df[plot_df["LNCEL name"] == cell]
+                cell_df = plot_df[plot_df["Cell Name"] == cell]
 
                 fig.add_trace(
                     go.Scatter(
