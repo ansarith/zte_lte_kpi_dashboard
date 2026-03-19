@@ -43,7 +43,7 @@ selected_kpis = st.multiselect(
 )
 
 # 🎯 Ensure consistent order (fix color shifting)
-selected_kpis = sorted(selected_kpis)4])
+selected_kpis = sorted(selected_kpis)
 
 # ---------------- SITE FILTER ----------------
 enodeb_selected = st.multiselect("Select ENBFunction Name", options=sorted(df["ENBFunction Name"].unique()))
@@ -156,7 +156,7 @@ if not plot_df.empty:
         # ---------- PLOTLY DASHBOARD GRAPH ----------
         if not group_option and "Cell Name" in plot_df.columns:
 
-            for i, cell in enumerate(plot_df["Cell Name"].unique()):
+            for cell in sorted(plot_df["Cell Name"].unique()):
 
                 cell_df = plot_df[plot_df["Cell Name"] == cell]
 
