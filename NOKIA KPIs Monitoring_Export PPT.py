@@ -85,9 +85,10 @@ def aggregate_data(df, kpis, daily=False, group=False):
     if daily:
         df["Date"] = df["Begin Time"].dt.normalize()
     
-        # 🚫 Remove last (incomplete) day
+        first_day = df["Date"].min()
         last_day = df["Date"].max()
-        df = df[df["Date"] < last_day]
+    
+        df = df[(df["Date"] > first_day) & (df["Date"] < last_day)]
     
         time_col = "Date"
     else:
