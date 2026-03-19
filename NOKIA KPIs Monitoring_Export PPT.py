@@ -178,7 +178,7 @@ if not plot_df.empty:
                     y=plot_df[selected_kpi],
                     mode="lines+markers",
                     name=selected_kpi,
-                    line=dict(color=kpi_color_map[selected_kpi])
+                    line=dict(color=colors[0])
                 )
             )
 
